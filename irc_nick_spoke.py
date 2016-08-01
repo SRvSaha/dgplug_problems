@@ -2485,7 +2485,6 @@ log = """[15:00:37] [## Class Started at Sun Jun 19 15:00:37 2016 ##]
 nicks = []
 nick_map = dict()
 
-
 def list_of_nicks():
     """
     The list will contain all the nicks from the logs and return the list
@@ -2500,10 +2499,10 @@ def list_of_nicks():
                 b = i
                 nick = string[a:b]
                 break
+        # To avoid duplication of nicks
         if nick not in nicks and nick != "":
             nicks.append(nick)
     return nicks
-
 
 def print_nicks():
     """
@@ -2511,7 +2510,6 @@ def print_nicks():
     """
     for nick in list_of_nicks():
         print(nick,sep = ",")
-
 
 def nick_mapping():
     """
@@ -2524,37 +2522,38 @@ def nick_mapping():
         if '<' in (string.split(" "))[1]:
             user = ((string.split(" "))[1])[1:-1]  # The nick
             for word in string.split(" ")[2:]:
-                #     if word in list_of_nicks() and user != word:
-                #         print(user, ":", word)
-                #     elif word[1:] in list_of_nicks() and user != word[1:]:
-                #         print(user, ":", word[1:])
-                #     elif word[:-1] in list_of_nicks() and user != word[:-1]:
-                #         print(user, ":", word[:-1])
-                #     elif word[1:-1] in list_of_nicks() and user != word[1:-1]:
-                #         print(user, ":", word[1:-1])
-                #     elif word[:-4] in list_of_nicks() and user != word[:-4]:
-                #         print(user, ":", word[:-4])
+                # Case like SRvSaha
                 if word in list_of_nicks() and user != word:
                     word = word
+                # Case like @SRvSaha
                 elif word[1:] in list_of_nicks() and user != word[1:]:
                     word = word[1:]
+                # Case like SRvSaha, or SRvSaha:
                 elif word[:-1] in list_of_nicks() and user != word[:-1]:
                     word = word[:-1]
+                # Case like @SRvSaha,
                 elif word[1:-1] in list_of_nicks() and user != word[1:-1]:
                     word = word[1:-1]
+                # Case like SRvSaha..:)
                 elif word[:-4] in list_of_nicks() and user != word[:-4]:
                     word = word[:-4]
 
+                # If the user in not in NICKS add it, else it's already there
                 if user not in nick_map.keys():
                     nick_map[user] = {}
                 if word in list_of_nicks():
                     if word in nick_map[user].keys():
+                        # If the word is already there, increment it
                         nick_map[user][word] += 1
                     else:
+                        # If the word is found for the first time
                         nick_map[user][word] = 1
 
     for key in sorted(nick_map.keys()):
+        # Condition to avoid all the empty dict values
         if len(nick_map[key].items()) != 0:
+            # lamba expression takes input the tuple and return the
+            # tuple
             who,time = sorted(nick_map[key].items(), key=lambda x: x[1], reverse=True)[0]
             print(key,"spoke to",who,time,"times")
 
