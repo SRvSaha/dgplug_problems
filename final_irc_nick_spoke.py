@@ -1,13 +1,26 @@
 #
 #   @author      : SRvSaha
-#   Filename     : irc_nick_spoke.py
-#   Timestamp    : 20:13 29-July-2016 (Friday)
-#   Description  : To find out which nick spoke with whom highest number of
-#        times and also the number of times nick a spoke with nick b.
-#        example : SRvSaha spoke with kushal 55 times
+#   Filename     : irc_nick_count.py
+#   Timestamp    : 18:59 26-July-2016 (Thursday)
+#   Description  : This code is used to find out the mapping of the nick to
+#   the number of times it messaged in the IRC. It's a dictionary based
+#   key-value type output.
 #
 
-log = """[15:00:37] [## Class Started at Sun Jun 19 15:00:37 2016 ##]
+# ''' Take the 4 logs from the top of https://dgplug.org/irclogs/2016/  and then try to find for each nick ever present in
+# those files, who spoke with whom highest number of times.
+
+#  Like: kushal spoke to avik 35 times
+#     avik spoke to gkadam 55 times
+
+#  and like that, for all the nicks. '''
+
+# log1 contains the content of log https://www.dgplug.org/irclogs/2016/Logs-2016-06-19-15-00-introduction.txt
+# log2 contains the content of log https://www.dgplug.org/irclogs/2016/Logs-2016-06-20-15-00-second_session.txt
+# log3 contains the content of log https://www.dgplug.org/irclogs/2016/Logs-2016-06-20-15-00-session4.txt
+# log4 contains the content of log https://www.dgplug.org/irclogs/2016/Logs-2016-06-20-15-00-session5.txt
+
+lines = """[15:00:37] [## Class Started at Sun Jun 19 15:00:37 2016 ##]
 [15:00:37] <kushal> startclass
 [15:00:39] <avik> Ultimatepritam hey, im  from kolkata
 [15:00:41] <rahuldecoded_> NE where ?
@@ -2482,80 +2495,28 @@ log = """[15:00:37] [## Class Started at Sun Jun 19 15:00:37 2016 ##]
 [16:10:50] <sayan> endclass
 [16:10:50] [## Class Ended at Thu Jun 23 16:10:50 2016 ##]"""
 
-nicks = []
-nick_map = dict()
+result = {}
 
-def list_of_nicks():
-    """
-    The list will contain all the nicks from the logs and return the list
-    """
-    nick = ""
-    for string in log.split("\n"):
-        for i in range(len(string)):
-            if string[i] == "<":
-                a = i + 1
-                while(string[i] != ">"):
-                    i += 1
-                b = i
-                nick = string[a:b]
-                break
-        # To avoid duplication of nicks
-        if nick not in nicks and nick != "":
-            nicks.append(nick)
-    return nicks
+for line in lines.splitlines():
+    if line[11] == '<':
+        key = line[12:].split('>')[0]
+        if key not in result.keys():
+            result[key] = {}
 
-def print_nicks():
-    """
-    Prints all the unique nicks in the log
-    """
-    for nick in list_of_nicks():
-        print(nick,sep = ",")
+key = result.keys()
 
-def nick_mapping():
-    """
-    Maps the nick to all the nicks to which it had chat and also counts
-    the number of times the nick did chat.
-    Dictionary of the type {key : { value1,value2 }} where value1  will be the nick and value 2 will be he number of times
-    """
-    for string in log.split("\n")[1:-1]:
-        # Removing the Start Class and End Class Log lines
-        if '<' in (string.split(" "))[1]:
-            user = ((string.split(" "))[1])[1:-1]  # The nick
-            for word in string.split(" ")[2:]:
-                # Case like SRvSaha
-                if word in list_of_nicks() and user != word:
-                    word = word
-                # Case like @SRvSaha
-                elif word[1:] in list_of_nicks() and user != word[1:]:
-                    word = word[1:]
-                # Case like SRvSaha, or SRvSaha:
-                elif word[:-1] in list_of_nicks() and user != word[:-1]:
-                    word = word[:-1]
-                # Case like @SRvSaha,
-                elif word[1:-1] in list_of_nicks() and user != word[1:-1]:
-                    word = word[1:-1]
-                # Case like SRvSaha..:)
-                elif word[:-4] in list_of_nicks() and user != word[:-4]:
-                    word = word[:-4]
+for line in lines.splitlines():
+    if line[11] == '<':
+        name = line[12:].split('>')[0]
+        msg = line[12:].split('>')[1]
+        for f in key:
+            if f in msg and f != name:
+                result[name][f] = result[name].get(f, 0) + 1
 
-                # If the user in not in NICKS add it, else it's already there
-                if user not in nick_map.keys():
-                    nick_map[user] = {}
-                if word in list_of_nicks():
-                    if word in nick_map[user].keys():
-                        # If the word is already there, increment it
-                        nick_map[user][word] += 1
-                    else:
-                        # If the word is found for the first time
-                        nick_map[user][word] = 1
-
-    for key in sorted(nick_map.keys()):
-        # Condition to avoid all the empty dict values
-        if len(nick_map[key].items()) != 0:
-            # lamba expression takes input the tuple and return the
-            # tuple
-            who,time = sorted(nick_map[key].items(), key=lambda x: x[1], reverse=True)[0]
-            print(key,"spoke to",who,time,"times")
-
-if __name__ == "__main__":
-    nick_mapping()
+for key in sorted(result.keys()):
+    # Condition to avoid all the empty dict values
+    if len(result[key].items()) != 0:
+        # lamba expression takes input the tuple and return the
+        # tuple
+        who,time = sorted(result[key].items(), key=lambda x: x[1], reverse=True)[0]
+        print(key,"spoke to",who,time,"times")
